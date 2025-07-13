@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淘宝智能客服 - 大对话框版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.21.1/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --taobao-orange: #FF4400;
+            --light-orange: #FFEEE6;
+            --dark-orange: #E63B00;
+            --gray-bg: #F5F5F5;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #E0E0E0;
+            --message-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffede6 0%, #fff5f0 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1400px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(255, 68, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header {
+            padding: 25px 20px;
+            background: var(--taobao-orange);
+            color: white;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(230, 59, 0, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .user-info {
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, #fff, #fffaf8);
+        }
+        
+        .avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--light-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--taobao-orange);
+            font-size: 24px;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(255, 68, 0, 0.15);
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-details h3 {
+            font-size: 18px;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .user-details p {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .quick-actions {
+            padding: 20px 18px;
+            background: #fffdfc;
+        }
+        
+        .section-title {
+            font-size: 15px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            color: var(--taobao-orange);
+        }
+        
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 14px 18px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            text-align: left;
+            margin-bottom: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            color: var(--text-dark);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-btn:hover {
+            background: var(--light-orange);
+            border-color: var(--taobao-orange);
+            color: var(--taobao-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 68, 0, 0.15);
+        }
+        
+        .action-btn i {
+            margin-right: 12px;
+            width: 22px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .recent-orders {
+            padding: 18px;
+            flex: 1;
+            overflow-y: auto;
+            background: #fffbfa;
+        }
+        
+        .order-item {
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s;
+        }
+        
+        .order-item:hover {
+            border-color: var(--taobao-orange);
+            transform: translateX(5px);
+            box-shadow: 0 6px 15px rgba(255, 68, 0, 0.1);
+        }
+        
+        .order-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dark);
+        }
+        
+        .order-status {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--taobao-orange);
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255, 68, 0, 0.1);
+        }
+        
+        .order-desc {
+            font-size: 14px;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--gray-bg);
+            position: relative;
+        }
+        
+        .chat-header {
+            padding: 18px 30px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 5;
+        }
+        
+        .chat-header i {
+            color: var(--taobao-orange);
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .chat-header h2 {
+            font-size: 22px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .chat-status {
+            margin-left: auto;
+            font-size: 15px;
+            color: #52c41a;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .chat-status .dot {
+            width: 10px;
+            height: 10px;
+            background: #52c41a;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 8px rgba(82, 196, 26, 0.5);
+        }
+        
+        .chat-container {
+            flex: 1;
+            padding: 25px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: #fcf9f8;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 18px 22px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            position: relative;
+            animation: fadeIn 0.4s;
+            line-height: 1.6;
+            font-size: 16px;
+            box-shadow: var(--message-shadow);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background: white;
+            border-top-left-radius: 5px;
+            box-shadow: var(--message-shadow);
+            border: 1px solid #ffebe6;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--taobao-orange) 0%, var(--dark-orange) 100%);
+            color: white;
+            border-top-right-radius: 5px;
+            box-shadow: 0 4px 15px rgba(255, 68, 0, 0.3);
+        }
+        
+        .message-time {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 10px;
+            text-align: right;
+            opacity: 0.8;
+        }
+        
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .quick-reply {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 18px;
+            margin: 0 12px 12px 0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .quick-reply:hover {
+            border-color: var(--taobao-orange);
+            color: var(--taobao-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 68, 0, 0.15);
+        }
+        
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 5;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .message-input:focus {
+            border-color: var(--taobao-orange);
+            box-shadow: 0 4px 15px rgba(255, 68, 0, 0.2);
+        }
+        
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--taobao-orange) 0%, var(--dark-orange) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: all 0.3s;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 68, 0, 0.3);
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 68, 0, 0.4);
+        }
+        
+        .features {
+            display: flex;
+            padding: 0 30px 20px;
+            background: white;
+        }
+        
+        .feature-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 5px;
+            color: var(--text-light);
+            font-size: 13px;
+            cursor: pointer;
+            transition: color 0.3s;
+            border-radius: 10px;
+            margin: 0 5px;
+        }
+        
+        .feature-btn:hover {
+            color: var(--taobao-orange);
+            background: rgba(255, 68, 0, 0.05);
+        }
+        
+        .feature-btn i {
+            font-size: 22px;
+            margin-bottom: 8px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff8f6;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .feature-btn:hover i {
+            background: var(--light-orange);
+            transform: translateY(-3px);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 16px 22px;
+            background: white;
+            border-radius: 20px;
+            width: fit-content;
+            margin-bottom: 25px;
+            box-shadow: var(--message-shadow);
+            border: 1px solid #ffebe6;
+        }
+        
+        .typing-indicator span {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            display: inline-block;
+            margin: 0 3px;
+            animation: typing 1s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-7px); }
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 20px;
+            margin: 20px auto;
+            max-width: 80%;
+            box-shadow: var(--message-shadow);
+            border: 1px solid #ffebe6;
+        }
+        
+        .welcome-message h3 {
+            color: var(--taobao-orange);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .welcome-message p {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 100%;
+                height: 95vh;
+            }
+            
+            .sidebar {
+                width: 280px;
+            }
+            
+            .message {
+                max-width: 85%;
+                padding: 16px 20px;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+                height: 95vh;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .recent-orders {
+                display: none;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 左侧边栏 -->
+            <div class="sidebar">
+                <div class="header">
+                    <h1><i class="fas fa-comments"></i> 淘宝智能客服</h1>
+                </div>
+                
+                <div class="user-info">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <h3>{{ userInfo.username || '淘小宝' }}</h3>
+                        <p>ID: {{ userInfo.id || 'TB123456789' }}</p>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="section-title">
+                        <i class="fas fa-bolt"></i> 快速操作
+                    </div>
+                    <button class="action-btn" @click="quickAction('订单查询')">
+                        <i class="fas fa-clipboard-list"></i> 我的订单
+                    </button>
+                    <button class="action-btn" @click="quickAction('退货退款')">
+                        <i class="fas fa-undo-alt"></i> 退货/退款
+                    </button>
+                    <button class="action-btn" @click="quickAction('物流查询')">
+                        <i class="fas fa-truck"></i> 物流查询
+                    </button>
+                    <button class="action-btn" @click="quickAction('优惠券')">
+                        <i class="fas fa-tag"></i> 优惠券
+                    </button>
+                </div>
+                
+                <div class="recent-orders">
+                    <div class="section-title">
+                        <i class="fas fa-history"></i> 最近订单
+                    </div>
+                    <div class="order-item" v-for="(order, index) in userOrders" :key="index" @click="selectOrder(order)">
+                        <div class="order-title">
+                            <span>{{ order.title }}</span>
+                            <span class="order-status">{{ order.status }}</span>
+                        </div>
+                        <div class="order-desc">
+                            <span>订单号: {{ order.id }}</span>
+                            <span>¥{{ order.price }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 主聊天区域 -->
+            <div class="main-content">
+                <div class="chat-header">
+                    <i class="fas fa-robot"></i>
+                    <h2>智能客服小蜜</h2>
+                    <div class="chat-status">
+                        <div class="dot"></div>
+                        <span>在线</span>
+                    </div>
+                </div>
+                
+                <div class="chat-container" ref="chatContainer">
+                    <div class="welcome-message" v-if="messages.length === 0">
+                        <h3>👋 您好！欢迎使用淘宝智能客服</h3>
+                        <p>我是您的专属客服小蜜，可以帮您查询订单、物流信息，处理退货退款，解答支付问题等。请随时告诉我您的需求！</p>
+                        <div class="quick-replies">
+                            <div class="quick-reply" @click="sendMessage('我的订单')">
+                                查看我的订单
+                            </div>
+                            <div class="quick-reply" @click="sendMessage('物流状态')">
+                                查询物流
+                            </div>
+                            <div class="quick-reply" @click="sendMessage('优惠券')">
+                                我的优惠券
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-for="(message, index) in messages" :key="index" 
+                         :class="['message', message.sender === 'user' ? 'user-message' : 'bot-message']">
+                        {{ message.content }}
+                        <div class="message-time">{{ message.time }}</div>
+                        
+                        <div class="quick-replies" v-if="message.quickReplies && message.sender === 'bot'">
+                            <div class="quick-reply" v-for="(reply, rIndex) in message.quickReplies" :key="rIndex"
+                                 @click="sendMessage(reply)">
+                                {{ reply }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="typing-indicator" v-if="isTyping">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span style="margin-left: 15px; font-size: 14px;">小蜜正在思考中...</span>
+                    </div>
+                </div>
+                
+                <div class="features">
+                    <div class="feature-btn" @click="showFeature('photo')">
+                        <i class="fas fa-camera"></i>
+                        <span>照片</span>
+                    </div>
+                    <div class="feature-btn" @click="showFeature('order')">
+                        <i class="fas fa-receipt"></i>
+                        <span>订单</span>
+                    </div>
+                    <div class="feature-btn" @click="showFeature('payment')">
+                        <i class="fas fa-credit-card"></i>
+                        <span>支付</span>
+                    </div>
+                    <div class="feature-btn" @click="showFeature('location')">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>位置</span>
+                    </div>
+                    <div class="feature-btn" @click="transferToHuman">
+                        <i class="fas fa-user-headset"></i>
+                        <span>人工客服</span>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <input type="text" class="message-input" v-model="userInput" 
+                           placeholder="输入您的问题..." @keyup.enter="sendMessage(userInput)">
+                    <button class="send-btn" @click="sendMessage(userInput)">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                userInput: '',
+                messages: [],
+                isTyping: false,
+                userInfo: {},
+                userOrders: [
+                    { id: 'TB20230712001', title: 'Apple iPhone 14 Pro', price: '8999.00', status: '已发货' },
+                    { id: 'TB20230711005', title: '耐克运动鞋', price: '699.00', status: '运输中' },
+                    { id: 'TB20230709012', title: '小米扫地机器人', price: '2299.00', status: '已完成' },
+                    { id: 'TB20230705008', title: '欧莱雅护肤套装', price: '399.00', status: '已收货' }
+                ],
+                apiBaseUrl: 'http://127.0.0.1:5000',
+                userId: 'TB123456789'
+            },
+            mounted() {
+                this.loadUserData();
+                this.loadChatHistory();
+                
+                if (this.messages.length === 0) {
+                    setTimeout(() => {
+                        this.sendMessage('初始化欢迎语', true);
+                    }, 1000);
+                }
+            },
+            methods: {
+                addMessage(content, sender, quickReplies = []) {
+                    const now = new Date();
+                    const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    this.messages.push({
+                        content,
+                        sender,
+                        time,
+                        quickReplies
+                    });
+                    
+                    this.$nextTick(() => {
+                        this.$refs.chatContainer.scrollTop = this.$refs.chatContainer.scrollHeight;
+                    });
+                },
+                
+                addBotMessage(content, quickReplies = []) {
+                    this.addMessage(content, 'bot', quickReplies);
+                },
+                
+                addUserMessage(content) {
+                    this.addMessage(content, 'user');
+                },
+                
+                async sendMessage(content, isSystemMessage = false) {
+                    if (!content.trim() && !isSystemMessage) return;
+                    
+                    if (!isSystemMessage) {
+                        this.addUserMessage(content);
+                        this.userInput = '';
+                    }
+                    
+                    this.isTyping = true;
+                    
+                    try {
+                        const response = await axios.post(
+                            `${this.apiBaseUrl}/api/chat`, 
+                            {
+                                user_id: this.userId,
+                                message: content
+                            },
+                            {
+                                headers: { 'Content-Type': 'application/json' }
+                            }
+                        );
+                        
+                        if (response.data.success) {
+                            this.addBotMessage(response.data.response);
+                        } else {
+                            this.addBotMessage(response.data.message || "客服回复失败");
+                        }
+                    } catch (error) {
+                        console.error('API错误:', error);
+                        let errorMsg = "网络连接异常";
+                        if (error.response) {
+                            switch (error.response.status) {
+                                case 404:
+                                    errorMsg = "服务未找到，请检查API地址";
+                                    break;
+                                case 500:
+                                    errorMsg = "服务器内部错误";
+                                    break;
+                            }
+                        }
+                        this.addBotMessage(errorMsg);
+                    } finally {
+                        this.isTyping = false;
+                    }
+                },
+                
+                async loadUserData() {
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                        this.userInfo = {
+                            id: 'TB123456789',
+                            username: '淘小宝',
+                            avatar: '',
+                            vip_level: 3,
+                            points: 1250
+                        };
+                    } catch (error) {
+                        console.error('加载用户数据失败:', error);
+                    }
+                },
+                
+                async loadChatHistory() {
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 700));
+                    } catch (error) {
+                        console.error('加载聊天历史失败:', error);
+                    }
+                },
+                
+                quickAction(action) {
+                    this.sendMessage(action);
+                },
+                
+                selectOrder(order) {
+                    this.sendMessage(`查看订单 ${order.id}`);
+                },
+                
+                showFeature(feature) {
+                    const featureNames = {
+                        'photo': '发送照片',
+                        'order': '查看订单',
+                        'payment': '支付问题',
+                        'location': '位置共享'
+                    };
+                    this.sendMessage(featureNames[feature]);
+                },
+                
+                async transferToHuman() {
+                    this.addUserMessage('转人工客服');
+                    this.isTyping = true;
+                    
+                    try {
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        this.addBotMessage('正在为您转接人工客服，请稍候...');
+                        setTimeout(() => {
+                            this.addBotMessage('已连接人工客服，请问有什么可以帮您？');
+                        }, 2500);
+                    } catch (error) {
+                        console.error('转接人工客服失败:', error);
+                        this.addBotMessage('人工客服转接失败，请稍后再试');
+                    } finally {
+                        this.isTyping = false;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
